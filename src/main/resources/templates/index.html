@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Just Cafe — Crafted With Love</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+
+
+<!-- ========== COFFEE POUR SCROLL CANVAS ========== -->
+<canvas id="coffeeCanvas"></canvas>
+
+<!-- ========== NAVIGATION ========== -->
+<nav id="navbar">
+    <div class="nav-inner">
+        <a href="#hero" class="nav-logo">
+            <span class="logo-just">Just</span><span class="logo-cafe">Cafe</span>
+        </a>
+        <ul class="nav-links">
+            <li><a href="#menu">Menu</a></li>
+            <li><a href="#customize">Customize</a></li>
+            <li><a href="#about">About</a></li>
+            <li><a href="#locations">Locations</a></li>
+        </ul>
+        <button class="nav-order-btn" onclick="openOrderModal()">Order Now</button>
+        <button class="hamburger" id="hamburger" aria-label="Menu">
+            <span></span><span></span><span></span>
+        </button>
+    </div>
+    <div class="mobile-menu" id="mobileMenu">
+        <a href="#menu" onclick="closeMobileMenu()">Menu</a>
+        <a href="#customize" onclick="closeMobileMenu()">Customize</a>
+        <a href="#about" onclick="closeMobileMenu()">About</a>
+        <a href="#locations" onclick="closeMobileMenu()">Locations</a>
+        <a href="#" onclick="openOrderModal(); closeMobileMenu()">Order Now</a>
+    </div>
+</nav>
+
+<!-- ========== HERO ========== -->
+<section id="hero">
+    <div class="hero-content">
+        <div class="hero-eyebrow">Est. 2020 · PH x CA</div>
+        <h1 class="hero-title">
+            <span class="hero-line-1">Just a</span>
+            <span class="hero-line-2">perfect cup.</span>
+        </h1>
+        <p class="hero-sub">Sit and Relax, Let the worries washed down with a simple sip.<br>Your next favorite thing.</p>
+        <div class="hero-ctas">
+            <a href="#menu" class="btn-primary">Explore Menu</a>
+            <a href="#about" class="btn-ghost">Our Story</a>
+        </div>
+        <div class="hero-scroll-hint">
+            <span>Scroll to discover</span>
+            <div class="scroll-arrow"></div>
+        </div>
+    </div>
+    <div class="hero-visual">
+        <div class="coffee-cup-wrapper">
+            <div class="steam s1"></div>
+            <div class="steam s2"></div>
+            <div class="steam s3"></div>
+            <div class="cup-body">
+                <div class="cup-liquid"></div>
+                <div class="cup-foam"></div>
+                <div class="latte-art"></div>
+            </div>
+            <div class="cup-handle"></div>
+            <div class="cup-saucer"></div>
+        </div>
+    </div>
+</section>
+
+<!-- ========== MARQUEE STRIP ========== -->
+<div class="marquee-strip">
+    <div class="marquee-track">
+        <span>☕ Specialty Coffee</span>
+        <span>✦</span>
+        <span>🌿 Matcha Drinks</span>
+        <span>✦</span>
+        <span>🥐 Fresh Pastries</span>
+        <span>✦</span>
+        <span>🧊 Cold Brews</span>
+        <span>✦</span>
+        <span>🥑 Wholesome Meals</span>
+        <span>✦</span>
+        <span>🍫 Signature Mochas</span>
+        <span>✦</span>
+        <span>☕ Specialty Coffee</span>
+        <span>✦</span>
+        <span>🌿 Matcha Drinks</span>
+        <span>✦</span>
+        <span>🥐 Fresh Pastries</span>
+        <span>✦</span>
+        <span>🧊 Cold Brews</span>
+        <span>✦</span>
+        <span>🥑 Wholesome Meals</span>
+        <span>✦</span>
+        <span>🍫 Signature Mochas</span>
+        <span>✦</span>
+    </div>
+</div>
+
+<!-- ========== MENU SECTION ========== -->
+<section id="menu">
+    <div class="section-header reveal">
+        <div class="section-label">What We Brew</div>
+        <h2 class="section-title">Our Menu</h2>
+        <p class="section-desc">Specially handcrafted drinks and home-made foods using only quality ingredients for your convenience.</p>
+    </div>
+
+    <div class="menu-tabs reveal">
+        <button class="tab-btn active" data-tab="drinks">☕ Drinks</button>
+        <button class="tab-btn" data-tab="foods">🍽️ Food</button>
+    </div>
+
+    <!-- DRINKS -->
+    <div class="menu-panel active" id="tab-drinks">
+        <div class="menu-sub-tabs">
+            <button class="sub-tab active" data-filter="ALL">All</button>
+            <button class="sub-tab" data-filter="HOT">Hot</button>
+            <button class="sub-tab" data-filter="COLD">Cold</button>
+        </div>
+        <div class="menu-grid" id="drinksGrid">
+            <div th:each="item : ${drinks}" class="menu-card reveal"
+                 th:attr="data-sub=${item.subCategory},
+                           data-id=${item.id},
+                           data-name=${item.name},
+                           data-price=${item.price},
+                           data-category=${item.category},
+                           data-customizable=${item.customizable}">
+                <div class="card-emoji" th:text="${item.imageEmoji}">☕</div>
+                <div class="card-body">
+                    <div class="card-top">
+                        <h3 class="card-name" th:text="${item.name}">Item Name</h3>
+                        <span class="card-badge" th:text="${item.subCategory}">HOT</span>
+                    </div>
+                    <p class="card-desc" th:text="${item.description}">Description</p>
+                    <div class="card-footer">
+                        <span class="card-price">₱<span th:text="${#numbers.formatDecimal(item.price,1,2)}">0.00</span></span>
+                        <div class="card-actions">
+                            <span class="customizable-tag" th:if="${item.customizable}">✦ Customizable</span>
+                            <button class="btn-add" onclick="quickAdd(this)">Add</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOD -->
+    <div class="menu-panel" id="tab-foods">
+        <div class="menu-sub-tabs">
+            <button class="sub-tab active" data-filter="ALL">All</button>
+            <button class="sub-tab" data-filter="PASTRY">Pastries</button>
+            <button class="sub-tab" data-filter="MEAL">Meals</button>
+        </div>
+        <div class="menu-grid" id="foodsGrid">
+            <div th:each="item : ${foods}" class="menu-card reveal"
+                 th:attr="data-sub=${item.subCategory},
+                           data-id=${item.id},
+                           data-name=${item.name},
+                           data-price=${item.price},
+                           data-category=${item.category},
+                           data-customizable=${item.customizable}">
+                <div class="card-emoji" th:text="${item.imageEmoji}">🍽️</div>
+                <div class="card-body">
+                    <div class="card-top">
+                        <h3 class="card-name" th:text="${item.name}">Item Name</h3>
+                        <span class="card-badge" th:text="${item.subCategory}">PASTRY</span>
+                    </div>
+                    <p class="card-desc" th:text="${item.description}">Description</p>
+                    <div class="card-footer">
+                        <span class="card-price">₱<span th:text="${#numbers.formatDecimal(item.price,1,2)}">0.00</span></span>
+                        <div class="card-actions">
+                            <span class="customizable-tag" th:if="${item.customizable}">✦ Customizable</span>
+                            <button class="btn-add" onclick="quickAdd(this)">Add</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ========== CUSTOMIZE SECTION ========== -->
+<section id="customize">
+    <div class="customize-inner">
+        <div class="customize-text reveal">
+            <div class="section-label">Dive in to your uniqueness</div>
+            <h2 class="section-title">Customize<br>Your Order</h2>
+            <p>Not too sweet, not too hot, not too cheesy, or maybe a little bit of this and that. Make it your own way! See the options below.</p>
+            <div class="customize-features">
+                <div class="feat-item">
+                    <span class="feat-icon">🥛</span>
+                    <span>Milk Options</span>
+                </div>
+                <div class="feat-item">
+                    <span class="feat-icon">🍬</span>
+                    <span>Custom Sweetness</span>
+                </div>
+                <div class="feat-item">
+                    <span class="feat-icon">🥖</span>
+                    <span>Healthier Bread</span>
+                </div>
+                <div class="feat-item">
+                    <span class="feat-icon">✨</span>
+                    <span>Flavor Syrups</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="customize-builder reveal">
+            <div class="builder-card">
+                <div class="builder-header">
+                    <h3>Build Your Drink</h3>
+                    <button class="builder-toggle" onclick="toggleBuilder('food')">Switch to Food ›</button>
+                </div>
+
+                <!-- Drink Customizer -->
+                <div id="drinkBuilder" class="builder-content active">
+                    <div class="builder-select-wrapper">
+                        <label>Choose a drink</label>
+                        <select id="drinkSelect" onchange="updateDrinkPrice()">
+                            <option value="">— Select a drink —</option>
+                            <option th:each="item : ${drinks}"
+                                    th:value="${item.id}"
+                                    th:text="${item.name} + ' — ₱' + ${#numbers.formatDecimal(item.price,1,2)}"
+                                    th:attr="data-price=${item.price}">
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="customization-groups" id="drinkCustomGroups">
+                        <div th:each="option : ${drinkCustomizations}"
+                             th:with="group=${option.groupName}"
+                             class="custom-group"
+                             th:if="${#lists.isEmpty(drinkCustomizations) == false}">
+                        </div>
+                    </div>
+                    <!-- Groups populated by JS -->
+                    <div id="drinkCustomContainer"></div>
+
+                    <div class="builder-notes">
+                        <label>Special Instructions</label>
+                        <textarea id="drinkNotes" placeholder="Any special requests? (e.g., extra hot, no foam...)" rows="2"></textarea>
+                    </div>
+                    <div class="builder-total">
+                        <span>Estimated Total:</span>
+                        <span class="total-price" id="drinkTotal">₱0.00</span>
+                    </div>
+                    <button class="btn-primary full-width" onclick="addCustomOrder('drink')">Add to Order</button>
+                </div>
+
+                <!-- Food Customizer -->
+                <div id="foodBuilder" class="builder-content">
+                    <div class="builder-select-wrapper">
+                        <label>Choose a food item</label>
+                        <select id="foodSelect" onchange="updateFoodPrice()">
+                            <option value="">— Select a food item —</option>
+                            <option th:each="item : ${foods}"
+                                    th:value="${item.id}"
+                                    th:text="${item.name} + ' — ₱' + ${#numbers.formatDecimal(item.price,1,2)}"
+                                    th:attr="data-price=${item.price},data-customizable=${item.customizable}">
+                            </option>
+                        </select>
+                    </div>
+                    <div id="foodCustomContainer"></div>
+                    <div class="builder-notes">
+                        <label>Special Instructions</label>
+                        <textarea id="foodNotes" placeholder="Any special requests? (e.g., no onions, extra sauce...)" rows="2"></textarea>
+                    </div>
+                    <div class="builder-total">
+                        <span>Estimated Total:</span>
+                        <span class="total-price" id="foodTotal">₱0.00</span>
+                    </div>
+                    <button class="btn-primary full-width" onclick="addCustomOrder('food')">Add to Order</button>
+                </div>
+            </div>
+
+            <!-- Order Summary -->
+            <div class="order-summary" id="orderSummary">
+                <h4>Your Order <span id="orderCount" class="order-badge">0</span></h4>
+                <div class="order-items" id="orderItems">
+                    <div class="order-empty">Your order is empty.<br>Add something delicious!</div>
+                </div>
+                <div class="order-footer" id="orderFooter" style="display:none">
+                    <div class="order-grand-total">
+                        <span>Total:</span>
+                        <span id="grandTotal">₱0.00</span>
+                    </div>
+                    <button class="btn-primary full-width" onclick="openOrderModal()">Confirm Order</button>
+                    <button class="btn-ghost full-width" onclick="clearOrder()">Clear All</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ========== ABOUT SECTION ========== -->
+<section id="about">
+    <div class="about-inner">
+        <div class="about-visual reveal">
+            <div class="about-img-grid">
+                <div class="about-img-card big">
+                    <div class="img-placeholder coffee-bg">
+                        <span class="img-emoji">🏡</span>
+                        <span class="img-label">Homemade and Handcraft</span>
+                    </div>
+                </div>
+                <div class="about-img-card small top">
+                    <div class="img-placeholder warm-bg">
+                        <span class="img-emoji">🌱</span>
+                        <span class="img-label">Sourced Locally</span>
+                    </div>
+                </div>
+                <div class="about-img-card small bottom">
+                    <div class="img-placeholder cream-bg">
+                        <span class="img-emoji">🫶</span>
+                        <span class="img-label">Community First</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="about-text reveal">
+            <div class="section-label">Who We Are</div>
+            <h2 class="section-title">More than coffee.<br>A feeling.</h2>
+            <p class="about-lead">Just Cafe was born in 2020 from a simple idea: a good talk needs a good drink, and a good food makes a better conversation.</p>
+            <p>We started from a small stall, with only 2 staffs, me and my wife, hand in hand we created a place where people can come in, relax, have a good time with their friends or family or maybe just by themselves; It started with that simple idea, to creating a safe place for everybody.</p>
+            <p>Just Cafe never forget its origin, we are proud to say that all our coffee beans are locally sourced from Benguet, and Cavite respectively.</p>
+            <p>Just Cafe is not only a cafe, it is a safe place, a second home, a place to unwind or relax; Good or bad, Just Cafe is always open to welcome you with a hot meal.</p>
+            <div class="about-stats">
+                <div class="stat">
+                    <div class="stat-number">6</div>
+                    <div class="stat-label">Locations</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">10</div>
+                    <div class="stat-label">Farm Partners</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">19k+</div>
+                    <div class="stat-label">Cups Served</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">2020</div>
+                    <div class="stat-label">Est. Year</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="values-strip reveal">
+        <div class="value-card">
+            <div class="value-icon">🌿</div>
+            <h4>Locally Sourced</h4>
+            <p>We established a good partnership with the local farmers in the Philippines.</p>
+        </div>
+        <div class="value-card">
+            <div class="value-icon">🏡</div>
+            <h4>Open Community Space</h4>
+            <p>Every branch of Just Cafe is designed to be a gathering place for creatives, thinkers, dreamers, and friends.</p>
+        </div>
+        <div class="value-card">
+            <div class="value-icon">♻️</div>
+            <h4>We only have one Earth</h4>
+            <p>Compostable cups, coffee ground recycling and a 10% discount if you bring your own tumbler.</p>
+        </div>
+        <div class="value-card">
+            <div class="value-icon">❤️</div>
+            <h4>Dedication and love</h4>
+            <p>We ensure that every drink or food that we served are not only purely made with quality ingredients but also with outmost dedication and love. We make sure that our baristas get the adquet training to be able to serve our community better.</p>
+        </div>
+    </div>
+</section>
+
+<!-- ========== LOCATIONS SECTION ========== -->
+<section id="locations">
+    <div class="section-header reveal">
+        <div class="section-label">Find Us</div>
+        <h2 class="section-title">Our Locations</h2>
+        <p class="section-desc">Six branches in total. One consistent experience at each.</p>
+    </div>
+    <div class="locations-grid">
+        <div th:each="loc : ${locations}" class="location-card reveal">
+            <div class="location-pin">📍</div>
+            <div class="location-body">
+                <h3 th:text="${loc.branchName}">Branch Name</h3>
+                <div class="location-detail">
+                    <span class="loc-icon">🏠</span>
+                    <span th:text="${loc.address}">Address</span>
+                </div>
+                <div class="location-detail">
+                    <span class="loc-icon">🕐</span>
+                    <span th:text="${loc.openingHours}">Hours</span>
+                </div>
+                <div class="location-detail">
+                    <span class="loc-icon">📞</span>
+                    <span th:text="${loc.phone}">Phone</span>
+                </div>
+                <a th:href="${loc.mapUrl}" target="_blank" class="location-map-btn">View on Map ↗</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ========== FOOTER ========== -->
+<footer id="footer">
+    <div class="footer-inner">
+        <div class="footer-brand">
+            <div class="footer-logo">
+                <span class="logo-cafe">Just Cafe</span>
+            </div>
+            <p>Your place to reconnect, and unwind.</p>
+            <div class="footer-social">
+                <a href="#" aria-label="Instagram">📸</a>
+                <a href="#" aria-label="Facebook">📘</a>
+                <a href="#" aria-label="TikTok">🎵</a>
+            </div>
+        </div>
+        <div class="footer-links">
+            <h5>Navigate</h5>
+            <a href="#menu">Menu</a>
+            <a href="#customize">Customize</a>
+            <a href="#about">About Us</a>
+            <a href="#locations">Locations</a>
+        </div>
+        <div class="footer-links">
+            <h5>Visit Us</h5>
+            <a href="#">PH x CL</a>
+            <a href="#">Las Pinas</a>
+            <a href="#">Makati</a>
+            <a href="#">La Union</a>
+        </div>
+        <div class="footer-links">
+            <h5>Connect</h5>
+            <a href="#">hello@justcafe.ph</a>
+            <a href="#">+632 8123 4567</a>
+        </div>
+    </div>
+    <div class="footer-bottom">
+        <span>© 2026 Just Cafe. All rights reserved.</span>
+        <span class="footer-secret-trigger" id="secretTrigger" onclick="openSecretModal()">Make it your way.</span>
+    </div>
+</footer>
+
+<!-- ========== SECRET CODE MODAL ========== -->
+<div class="secret-modal-overlay" id="secretModal">
+    <div class="secret-modal-box">
+        <button class="secret-modal-close" onclick="closeSecretModal()">✕</button>
+        <div class="secret-modal-icon">☕</div>
+        <h3 class="secret-modal-title">Members Only</h3>
+        <p class="secret-modal-sub">Enter your access code to continue.</p>
+        <div class="secret-input-wrap">
+            <input type="password" id="secretCodeInput" placeholder="Enter code..."
+                   autocomplete="off" onkeydown="if(event.key==='Enter') submitSecretCode()">
+            <div class="secret-error" id="secretError"></div>
+        </div>
+        <button class="secret-submit-btn" onclick="submitSecretCode()">Enter</button>
+    </div>
+</div>
+
+<!-- ========== ORDER MODAL ========== -->
+<div class="modal-overlay" id="orderModal">
+    <div class="modal-box">
+        <button class="modal-close" onclick="closeOrderModal()">✕</button>
+        <h3>Confirm Your Order</h3>
+        <div class="modal-order-list" id="modalOrderList"></div>
+        <div class="modal-form">
+            <label>Your Name</label>
+            <input type="text" id="customerName" placeholder="Enter your name">
+            <label>Pick-up Location</label>
+            <select id="pickupLocation">
+                <option th:each="loc : ${locations}" th:value="${loc.branchName}" th:text="${loc.branchName}">Location</option>
+            </select>
+        </div>
+        <div class="modal-total">
+            <span>Grand Total:</span>
+            <span id="modalGrandTotal">₱0.00</span>
+        </div>
+        <button class="btn-primary full-width" onclick="submitOrder()">Place Order</button>
+    </div>
+</div>
+
+<!-- ========== TOAST NOTIFICATION ========== -->
+<div class="toast" id="toast"></div>
+
+<!-- ========== THYMELEAF DATA TO JS ========== -->
+<script th:inline="javascript">
+    const drinkCustomizationsData = /*[[${drinkCustomizations}]]*/ [];
+    const foodCustomizationsData = /*[[${foodCustomizations}]]*/ [];
+</script>
+
+<script th:src="@{/js/coffee-canvas.js}"></script>
+<script th:src="@{/js/main.js}"></script>
+</body>
+</html>

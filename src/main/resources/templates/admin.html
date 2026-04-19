@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Just Cafe — Admin Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/admin.css}">
+</head>
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+<aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+        <span class="logo-just">Just</span><span class="logo-cafe">Cafe</span>
+        <span class="sidebar-badge">Admin</span>
+    </div>
+    <nav class="sidebar-nav">
+        <a href="#" class="nav-item active" data-panel="dashboard" onclick="showPanel('dashboard', this)">
+            <span class="nav-icon">📊</span> Dashboard
+        </a>
+        <a href="#" class="nav-item" data-panel="orders" onclick="showPanel('orders', this)">
+            <span class="nav-icon">🧾</span> Orders
+            <span class="nav-badge" id="sidebarPendingCount" th:text="${pendingCount}">0</span>
+        </a>
+        <a href="#" class="nav-item" data-panel="inventory" onclick="showPanel('inventory', this)">
+            <span class="nav-icon">📦</span> Inventory
+            <span class="nav-badge warn" id="sidebarLowCount"
+                  th:classappend="${lowStockCount > 0 ? 'warn' : ''}"
+                  th:text="${lowStockCount > 0 ? lowStockCount + ' low' : ''}"></span>
+        </a>
+    </nav>
+    <div class="sidebar-footer">
+        <a href="/" class="sidebar-back">← Back to Site</a>
+        <div class="sidebar-time" id="sidebarTime"></div>
+    </div>
+</aside>
+
+<!-- ===== MAIN CONTENT ===== -->
+<main class="admin-main">
+
+    <!-- Top bar -->
+    <header class="topbar">
+        <button class="hamburger-admin" onclick="toggleSidebar()">☰</button>
+        <h1 class="topbar-title" id="topbarTitle">Dashboard</h1>
+        <div class="topbar-actions">
+            <button class="btn-refresh" onclick="refreshAll()" title="Refresh data">↻ Refresh</button>
+            <div class="topbar-status">
+                <span class="status-dot"></span> Live
+            </div>
+        </div>
+    </header>
+
+    <!-- ===== PANEL: DASHBOARD ===== -->
+    <div class="panel active" id="panel-dashboard">
+        <div class="stat-cards">
+            <div class="stat-card orange">
+                <div class="stat-card-icon">🕐</div>
+                <div class="stat-card-body">
+                    <div class="stat-card-value" th:text="${pendingCount}" id="dc-pending">0</div>
+                    <div class="stat-card-label">Pending Orders</div>
+                </div>
+            </div>
+            <div class="stat-card blue">
+                <div class="stat-card-icon">⚙️</div>
+                <div class="stat-card-body">
+                    <div class="stat-card-value" th:text="${confirmedCount}" id="dc-confirmed">0</div>
+                    <div class="stat-card-label">In Progress</div>
+                </div>
+            </div>
+            <div class="stat-card green">
+                <div class="stat-card-icon">✅</div>
+                <div class="stat-card-body">
+                    <div class="stat-card-value" th:text="${readyCount}" id="dc-ready">0</div>
+                    <div class="stat-card-label">Ready / Served</div>
+                </div>
+            </div>
+            <div class="stat-card brown">
+                <div class="stat-card-icon">📋</div>
+                <div class="stat-card-body">
+                    <div class="stat-card-value" th:text="${totalOrders}" id="dc-total">0</div>
+                    <div class="stat-card-label">Total Orders</div>
+                </div>
+            </div>
+            <div class="stat-card red" th:classappend="${outOfStockCount > 0} ? 'alert' : ''">
+                <div class="stat-card-icon">🚫</div>
+                <div class="stat-card-body">
+                    <div class="stat-card-value" th:text="${outOfStockCount}" id="dc-outofstock">0</div>
+                    <div class="stat-card-label">Out of Stock</div>
+                </div>
+            </div>
+            <div class="stat-card yellow" th:classappend="${lowStockCount > 0} ? 'alert' : ''">
+                <div class="stat-card-icon">⚠️</div>
+                <div class="stat-card-body">
+                    <div class="stat-card-value" th:text="${lowStockCount}" id="dc-lowstock">0</div>
+                    <div class="stat-card-label">Low Stock Items</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick orders preview -->
+        <div class="dashboard-grid">
+            <div class="dash-section">
+                <div class="section-head">
+                    <h3>⏳ Pending Orders</h3>
+                    <button class="link-btn" onclick="showPanel('orders', null)">View all →</button>
+                </div>
+                <div class="quick-orders" id="quickPending">
+                    <div th:each="order : ${pendingOrders}" class="quick-order-row">
+                        <div class="qo-left">
+                            <span class="qo-id">#<span th:text="${order.id}"></span></span>
+                            <div>
+                                <div class="qo-name" th:text="${order.customerName}">Name</div>
+                                <div class="qo-item" th:text="${order.itemName}">Item</div>
+                            </div>
+                        </div>
+                        <div class="qo-right">
+                            <span class="status-pill pending">Pending</span>
+                            <button class="btn-start" th:attr="onclick='updateStatus(' + ${order.id} + ', \'CONFIRMED\')'">Start →</button>
+                        </div>
+                    </div>
+                    <div class="empty-state" th:if="${#lists.isEmpty(pendingOrders)}">
+                        No pending orders ✓
+                    </div>
+                </div>
+            </div>
+
+            <div class="dash-section">
+                <div class="section-head">
+                    <h3>⚠️ Low Stock Alerts</h3>
+                    <button class="link-btn" onclick="showPanel('inventory', null)">Manage →</button>
+                </div>
+                <div class="quick-orders" id="quickLowStock">
+                    <div th:each="item : ${lowStockItems}" class="quick-order-row">
+                        <div class="qo-left">
+                            <span class="qo-id" th:classappend="${item.stockQuantity == 0} ? 'out' : 'low'">
+                                <span th:text="${item.stockQuantity}"></span>
+                                <span style="font-size:0.65rem;display:block" th:text="${item.unit}"></span>
+                            </span>
+                            <div>
+                                <div class="qo-name" th:text="${item.itemName}">Item</div>
+                                <div class="qo-item" th:text="${item.category}">Category</div>
+                            </div>
+                        </div>
+                        <div class="qo-right">
+                            <span class="status-pill" th:classappend="${item.stockQuantity == 0} ? 'out-of-stock' : 'low-stock'"
+                                  th:text="${item.stockQuantity == 0} ? 'Out of Stock' : 'Low Stock'"></span>
+                        </div>
+                    </div>
+                    <div class="empty-state" th:if="${#lists.isEmpty(lowStockItems)}">
+                        All stock levels healthy ✓
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== PANEL: ORDERS ===== -->
+    <div class="panel" id="panel-orders">
+        <div class="orders-tabs">
+            <button class="order-tab active" data-status="PENDING" onclick="filterOrders('PENDING', this)">
+                ⏳ Pending <span class="tab-count" th:text="${pendingCount}">0</span>
+            </button>
+            <button class="order-tab" data-status="CONFIRMED" onclick="filterOrders('CONFIRMED', this)">
+                ⚙️ In Progress <span class="tab-count" th:text="${confirmedCount}">0</span>
+            </button>
+            <button class="order-tab" data-status="READY" onclick="filterOrders('READY', this)">
+                ✅ Ready <span class="tab-count" th:text="${readyCount}">0</span>
+            </button>
+            <button class="order-tab" data-status="ALL" onclick="filterOrders('ALL', this)">
+                📋 All <span class="tab-count" th:text="${totalOrders}">0</span>
+            </button>
+        </div>
+
+        <div class="orders-grid" id="ordersGrid">
+            <!-- PENDING -->
+            <div th:each="order : ${pendingOrders}"
+                 class="order-card"
+                 th:attr="data-status='PENDING', data-id=${order.id}">
+                <div class="order-card-header">
+                    <div class="order-card-id">#<span th:text="${order.id}"></span></div>
+                    <span class="status-pill pending">⏳ Pending</span>
+                    <button class="order-card-delete" th:attr="onclick='deleteOrder(' + ${order.id} + ')'">✕</button>
+                </div>
+                <div class="order-card-customer" th:text="${order.customerName}">Customer</div>
+                <div class="order-card-item">
+                    <strong th:text="${order.itemName}">Item</strong>
+                    <span th:if="${order.quantity != null and order.quantity > 1}"
+                          class="qty-badge" th:text="'x' + ${order.quantity}"></span>
+                </div>
+                <div class="order-card-custom" th:if="${order.customizations != null and !#strings.isEmpty(order.customizations)}"
+                     th:text="${order.customizations}">Customizations</div>
+                <div class="order-card-note" th:if="${order.specialInstructions != null and !#strings.isEmpty(order.specialInstructions)}">
+                    📝 <span th:text="${order.specialInstructions}">Note</span>
+                </div>
+                <div class="order-card-footer">
+                    <div class="order-card-price">₱<span th:text="${#numbers.formatDecimal(order.totalPrice,1,2)}">0.00</span></div>
+                    <div class="order-card-time"
+                         th:text="${order.orderTime != null} ? ${#temporals.format(order.orderTime, 'h:mm a')} : ''"></div>
+                </div>
+                <div class="order-card-actions">
+                    <button class="btn-action confirm"
+                            th:attr="onclick='updateStatus(' + ${order.id} + ', \'CONFIRMED\')'">
+                        ⚙️ Start Preparing
+                    </button>
+                </div>
+            </div>
+
+            <!-- IN PROGRESS (CONFIRMED) -->
+            <div th:each="order : ${confirmedOrders}"
+                 class="order-card confirmed"
+                 th:attr="data-status='CONFIRMED', data-id=${order.id}">
+                <div class="order-card-header">
+                    <div class="order-card-id">#<span th:text="${order.id}"></span></div>
+                    <span class="status-pill confirmed">⚙️ In Progress</span>
+                    <button class="order-card-delete" th:attr="onclick='deleteOrder(' + ${order.id} + ')'">✕</button>
+                </div>
+                <div class="order-card-customer" th:text="${order.customerName}">Customer</div>
+                <div class="order-card-item">
+                    <strong th:text="${order.itemName}">Item</strong>
+                    <span th:if="${order.quantity != null and order.quantity > 1}"
+                          class="qty-badge" th:text="'x' + ${order.quantity}"></span>
+                </div>
+                <div class="order-card-custom" th:if="${order.customizations != null and !#strings.isEmpty(order.customizations)}"
+                     th:text="${order.customizations}">Customizations</div>
+                <div class="order-card-note" th:if="${order.specialInstructions != null and !#strings.isEmpty(order.specialInstructions)}">
+                    📝 <span th:text="${order.specialInstructions}">Note</span>
+                </div>
+                <div class="order-card-footer">
+                    <div class="order-card-price">₱<span th:text="${#numbers.formatDecimal(order.totalPrice,1,2)}">0.00</span></div>
+                    <div class="order-card-time"
+                         th:text="${order.orderTime != null} ? ${#temporals.format(order.orderTime, 'h:mm a')} : ''"></div>
+                </div>
+                <div class="order-card-actions">
+                    <button class="btn-action back"
+                            th:attr="onclick='updateStatus(' + ${order.id} + ', \'PENDING\')'">
+                        ← Back
+                    </button>
+                    <button class="btn-action ready"
+                            th:attr="onclick='updateStatus(' + ${order.id} + ', \'READY\')'">
+                        ✅ Mark Ready
+                    </button>
+                </div>
+            </div>
+
+            <!-- READY -->
+            <div th:each="order : ${readyOrders}"
+                 class="order-card ready"
+                 th:attr="data-status='READY', data-id=${order.id}">
+                <div class="order-card-header">
+                    <div class="order-card-id">#<span th:text="${order.id}"></span></div>
+                    <span class="status-pill ready">✅ Ready</span>
+                    <button class="order-card-delete" th:attr="onclick='deleteOrder(' + ${order.id} + ')'">✕</button>
+                </div>
+                <div class="order-card-customer" th:text="${order.customerName}">Customer</div>
+                <div class="order-card-item">
+                    <strong th:text="${order.itemName}">Item</strong>
+                    <span th:if="${order.quantity != null and order.quantity > 1}"
+                          class="qty-badge" th:text="'x' + ${order.quantity}"></span>
+                </div>
+                <div class="order-card-custom" th:if="${order.customizations != null and !#strings.isEmpty(order.customizations)}"
+                     th:text="${order.customizations}">Customizations</div>
+                <div class="order-card-footer">
+                    <div class="order-card-price">₱<span th:text="${#numbers.formatDecimal(order.totalPrice,1,2)}">0.00</span></div>
+                    <div class="order-card-time"
+                         th:text="${order.orderTime != null} ? ${#temporals.format(order.orderTime, 'h:mm a')} : ''"></div>
+                </div>
+                <div class="order-card-actions">
+                    <button class="btn-action back"
+                            th:attr="onclick='updateStatus(' + ${order.id} + ', \'CONFIRMED\')'">
+                        ← Back
+                    </button>
+                    <button class="btn-action delete"
+                            th:attr="onclick='deleteOrder(' + ${order.id} + ')'">
+                        🗑 Dismiss
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="empty-state fullpage" id="ordersEmpty" style="display:none">
+            No orders in this category.
+        </div>
+    </div>
+
+    <!-- ===== PANEL: INVENTORY ===== -->
+    <div class="panel" id="panel-inventory">
+        <div class="inv-toolbar">
+            <div class="inv-filter-tabs">
+                <button class="inv-tab active" data-cat="ALL" onclick="filterInventory('ALL', this)">All</button>
+                <button class="inv-tab" data-cat="DRINK" onclick="filterInventory('DRINK', this)">☕ Drinks</button>
+                <button class="inv-tab" data-cat="FOOD" onclick="filterInventory('FOOD', this)">🍽️ Food</button>
+                <button class="inv-tab" data-cat="INGREDIENT" onclick="filterInventory('INGREDIENT', this)">🌿 Ingredients</button>
+                <button class="inv-tab" data-cat="SUPPLY" onclick="filterInventory('SUPPLY', this)">📦 Supplies</button>
+                <button class="inv-tab warn" data-cat="LOW" onclick="filterInventory('LOW', this)">⚠️ Low Stock</button>
+            </div>
+            <div class="inv-search-wrap">
+                <input type="text" id="invSearch" placeholder="Search inventory..." oninput="searchInventory(this.value)">
+            </div>
+        </div>
+
+        <div class="inv-table-wrap">
+            <table class="inv-table" id="invTable">
+                <thead>
+                <tr>
+                    <th>Item</th>
+                    <th>Category</th>
+                    <th>Stock</th>
+                    <th>Unit</th>
+                    <th>Status</th>
+                    <th>Threshold</th>
+                    <th>Supplier</th>
+                    <th>Actions</th>
+                </tr>
+                </thead>
+                <tbody id="invTableBody">
+                <tr th:each="item : ${inventory}"
+                    th:attr="data-cat=${item.category},
+                                  data-name=${item.itemName},
+                                  data-status=${item.stockStatus},
+                                  data-id=${item.id}"
+                    th:classappend="${item.stockQuantity == 0} ? 'row-out' : (${item.stockQuantity <= item.lowStockThreshold} ? 'row-low' : '')">
+                    <td>
+                        <div class="inv-item-name" th:text="${item.itemName}">Name</div>
+                        <div class="inv-item-note" th:if="${item.notes != null and !#strings.isEmpty(item.notes)}"
+                             th:text="${item.notes}">Note</div>
+                    </td>
+                    <td>
+                            <span class="cat-badge" th:text="${item.category}"
+                                  th:classappend="${item.category == 'DRINK'} ? 'drink' :
+                                                   (${item.category == 'FOOD'} ? 'food' :
+                                                   (${item.category == 'INGREDIENT'} ? 'ingredient' : 'supply'))">
+                            </span>
+                    </td>
+                    <td>
+                        <div class="stock-cell">
+                            <button class="stock-btn minus"
+                                    th:attr="onclick='adjustStock(' + ${item.id} + ', -1)'">−</button>
+                            <span class="stock-val" th:id="'stock-' + ${item.id}"
+                                  th:text="${item.stockQuantity}">0</span>
+                            <button class="stock-btn plus"
+                                    th:attr="onclick='adjustStock(' + ${item.id} + ', 1)'">+</button>
+                        </div>
+                    </td>
+                    <td th:text="${item.unit}">unit</td>
+                    <td>
+                            <span class="status-pill"
+                                  th:id="'status-' + ${item.id}"
+                                  th:classappend="${item.stockQuantity == 0} ? 'out-of-stock' :
+                                                  (${item.stockQuantity <= item.lowStockThreshold} ? 'low-stock' : 'in-stock')"
+                                  th:text="${item.stockQuantity == 0} ? 'Out of Stock' :
+                                            (${item.stockQuantity <= item.lowStockThreshold} ? 'Low Stock' : 'In Stock')">
+                            </span>
+                    </td>
+                    <td th:text="${item.lowStockThreshold}">0</td>
+                    <td th:text="${item.supplier}">Supplier</td>
+                    <td>
+                        <button class="btn-restock"
+                                th:attr="onclick='openRestockModal(' + ${item.id} + ', \'' + ${item.itemName} + '\', ' + ${item.stockQuantity} + ')'">
+                            Restock
+                        </button>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</main>
+
+<!-- ===== RESTOCK MODAL ===== -->
+<div class="modal-overlay" id="restockModal">
+    <div class="modal-box small">
+        <button class="modal-close" onclick="closeRestockModal()">✕</button>
+        <h3>Restock Item</h3>
+        <p class="modal-subtitle" id="restockItemName">Item Name</p>
+        <div class="restock-form">
+            <label>Current Stock</label>
+            <div class="current-stock-display" id="restockCurrent">0</div>
+            <label>Set New Quantity</label>
+            <div class="restock-input-row">
+                <button class="stock-btn minus" onclick="adjustRestockVal(-5)">−5</button>
+                <button class="stock-btn minus" onclick="adjustRestockVal(-1)">−1</button>
+                <input type="number" id="restockQty" min="0" value="0">
+                <button class="stock-btn plus" onclick="adjustRestockVal(1)">+1</button>
+                <button class="stock-btn plus" onclick="adjustRestockVal(10)">+10</button>
+            </div>
+        </div>
+        <div class="modal-actions">
+            <button class="btn-action back" onclick="closeRestockModal()">Cancel</button>
+            <button class="btn-action confirm" onclick="submitRestock()">Update Stock</button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== TOAST ===== -->
+<div class="admin-toast" id="adminToast"></div>
+
+<script th:src="@{/js/admin.js}"></script>
+</body>
+</html>
